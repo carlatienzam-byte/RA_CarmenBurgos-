@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prueba de zoom de cámara</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  video { width: 100%; height: 100%; object-fit: contain; }
+  #msg { position: fixed; top: 0; left: 0; width: 100%; padding: 10px; color: #7CFC7C;
+         font-family: monospace; font-size: 12px; background: rgba(0,0,0,0.7); white-space: pre-wrap; z-index: 10; }
+  #ctrl { position: fixed; bottom: 0; left: 0; width: 100%; padding: 10px; background: rgba(0,0,0,0.7); z-index: 10; }
+  button { font-size: 16px; padding: 8px 14px; margin-right: 8px; }
+</style>
+</head>
+<body>
+<div id="msg">Cargando cámara…</div>
+<video id="v" autoplay playsinline muted></video>
+<div id="ctrl"></div>
+<script>
+  var msg = document.getElementById('msg');
+  var ctrl = document.getElementById('ctrl');
+  var track;
+
+  function log(t) { msg.textContent += "\n" + t; }
+
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+    .then(function (stream) {
+      var v = document.getElementById('v');
+      v.srcObject = stream;
+      track = stream.getVideoTracks()[0];
+      var settings = track.getSettings();
+      msg.textContent = "Resolución: " + settings.width + "x" + settings.height +
+        "\nCámara: " + track.label;
+
+      if (track.getCapabilities) {
+        var caps = track.getCapabilities();
+        if ('zoom' in caps) {
+          log("Zoom soportado: min=" + caps.zoom.min + " max=" + caps.zoom.max + " actual=" + settings.zoom);
+          // Botones para probar distintos niveles de zoom
+          [caps.zoom.min, (caps.zoom.min + caps.zoom.max) / 2, caps.zoom.max].forEach(function (z) {
+            var b = document.createElement('button');
+            b.textContent = "Zoom " + z;
+            b.onclick = function () {
+              track.applyConstraints({ advanced: [{ zoom: z }] })
+                .then(function () { log("Zoom aplicado: " + z); })
+                .catch(function (e) { log("Error al aplicar zoom: " + e.message); });
+            };
+            ctrl.appendChild(b);
+          });
+          // Intentamos forzar el mínimo automáticamente nada más cargar
+          track.applyConstraints({ advanced: [{ zoom: caps.zoom.min }] })
+            .then(function () { log("Auto-aplicado zoom mínimo: " + caps.zoom.min); })
+            .catch(function (e) { log("Error auto-zoom: " + e.message); });
+        } else {
+          log("Este navegador/cámara NO expone control de zoom (no hay 'zoom' en capabilities)");
+        }
+      } else {
+        log("getCapabilities no soportado en este navegador");
+      }
+    })
+    .catch(function (err) {
+      msg.textContent = "Error: " + err.name + " " + err.message;
+    });
+</script>
+</body>
+</html>
