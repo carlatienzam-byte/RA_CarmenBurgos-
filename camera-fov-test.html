@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prueba de campo de visión</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  video { width: 100%; height: 100%; object-fit: contain; }
+  #msg { position: fixed; top: 0; left: 0; width: 100%; padding: 10px; color: #7CFC7C;
+         font-family: monospace; font-size: 12px; background: rgba(0,0,0,0.7); white-space: pre-wrap; z-index: 10; }
+  #ctrl { position: fixed; bottom: 0; left: 0; width: 100%; padding: 10px; background: rgba(0,0,0,0.7); z-index: 10; display:flex; flex-wrap:wrap; gap:6px; }
+  button { font-size: 14px; padding: 8px 10px; }
+</style>
+</head>
+<body>
+<div id="msg">Cargando…</div>
+<video id="v" autoplay playsinline muted></video>
+<div id="ctrl"></div>
+<script>
+  var msg = document.getElementById('msg');
+  var ctrl = document.getElementById('ctrl');
+
+  function log(t) { msg.textContent += "\n" + t; }
+
+  function startStream(constraints, label) {
+    // Para todos los tracks previos antes de pedir uno nuevo
+    var v = document.getElementById('v');
+    if (v.srcObject) v.srcObject.getTracks().forEach(function (t) { t.stop(); });
+
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then(function (stream) {
+        v.srcObject = stream;
+        var track = stream.getVideoTracks()[0];
+        var settings = track.getSettings();
+        msg.textContent = "[" + label + "]\nResolución real: " + settings.width + "x" + settings.height +
+          "\nresizeMode: " + settings.resizeMode +
+          "\nCámara: " + track.label;
+      })
+      .catch(function (err) {
+        msg.textContent = "[" + label + "] Error: " + err.name + " " + err.message;
+      });
+  }
+
+  var opciones = [
+    { label: "Básico (sin resolución)", c: { video: { facingMode: "environment" } } },
+    { label: "Alta res 1920x1080", c: { video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } } } },
+    { label: "resizeMode: none", c: { video: { facingMode: "environment", resizeMode: "none" } } },
+    { label: "Alta res + resizeMode none", c: { video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 }, resizeMode: "none" } } }
+  ];
+
+  opciones.forEach(function (op) {
+    var b = document.createElement('button');
+    b.textContent = op.label;
+    b.onclick = function () { startStream(op.c, op.label); };
+    ctrl.appendChild(b);
+  });
+
+  // Arranca con la opción básica
+  startStream(opciones[0].c, opciones[0].label);
+</script>
+</body>
+</html>
