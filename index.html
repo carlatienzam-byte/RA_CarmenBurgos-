@@ -3,54 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>RA con marcador — A-Frame + AR.js</title>
+<title>RA con marcador — Carmen de Burgos</title>
 
-<script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+<script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+<script src="aframe-ar.js"></script>
 
 <style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; }
   .arjs-loader {
-    height: 100%; width: 100%; position: fixed; top: 0; left: 0;
-    background: rgba(0,0,0,0.85); z-index: 9999;
+    height: 100%; width: 100%; position: absolute; top: 0; left: 0;
+    background-color: rgba(0, 0, 0, 0.8); z-index: 9999;
     display: flex; justify-content: center; align-items: center;
-    font-family: -apple-system, system-ui, sans-serif; color: #fff; text-align: center; padding: 24px;
   }
-  #info {
-    position: fixed; bottom: env(safe-area-inset-bottom, 0px); left: 0; width: 100%;
-    padding: 12px 16px; font-family: -apple-system, system-ui, sans-serif; font-size: 13px;
-    color: #fff; background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
-    z-index: 20; pointer-events: none; text-align: center;
-  }
+  .arjs-loader div { text-align: center; font-size: 1.25em; color: white; font-family: sans-serif; }
 </style>
 </head>
-<body>
+<body style="margin: 0px; overflow: hidden;">
 
-<div class="arjs-loader"><div>Cargando cámara y marcador…<br>Dale permiso a la cámara si te lo pide.</div></div>
-<div id="info">Enfoca el marcador Hiro impreso con la cámara del móvil</div>
+  <div class="arjs-loader"><div>Cargando…</div></div>
 
-<a-scene
-  vr-mode-ui="enabled: false"
-  renderer="logarithmicDepthBuffer: true; precision: medium; alpha: true"
-  embedded
-  arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
+  <a-scene
+    vr-mode-ui="enabled: false;"
+    renderer="logarithmicDepthBuffer: true; precision: medium;"
+    embedded
+    arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
 
-  <a-marker preset="hiro">
-    <a-box position="0 0.5 0" rotation="0 45 0" color="#4f8ef7" depth="1" height="1" width="1">
-      <a-animation attribute="rotation" to="0 405 0" dur="4000" easing="linear" repeat="indefinite"></a-animation>
-    </a-box>
-    <a-text value="Carmen de Burgos" align="center" position="0 1.3 0" color="#fff" scale="1.2 1.2 1.2"></a-text>
-  </a-marker>
+    <a-marker preset="hiro">
+      <a-entity gltf-model="carmen-burgos.glb"
+                position="0 0.95 0" scale="0.6 0.6 0.6" rotation="0 0 0">
+        <a-animation attribute="rotation" to="0 360 0" dur="8000" easing="linear" repeat="indefinite"></a-animation>
+      </a-entity>
+      <a-text value="Carmen de Burgos" align="center" position="0 2.2 0"
+              color="#ffffff" side="double" scale="1.5 1.5 1.5"></a-text>
+    </a-marker>
 
-  <a-entity camera></a-entity>
+    <a-entity camera></a-entity>
+  </a-scene>
 
-</a-scene>
-
-<script>
-  document.querySelector('a-scene').addEventListener('loaded', function () {
-    document.querySelector('.arjs-loader').style.display = 'none';
-  });
-</script>
+  <script>
+    document.querySelector('a-scene').addEventListener('loaded', function () {
+      document.querySelector('.arjs-loader').remove();
+    });
+  </script>
 
 </body>
 </html>
