@@ -1,82 +1,43 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>RA con marcador — Carmen de Burgos</title>
-
-<script>
-  // Interceptamos getUserMedia para que cualquier petición de vídeo (incluida la de AR.js)
-  // se pida SIN restricciones de resolución/aspecto, igual que la opción "básica"
-  // que dio más campo de visión en las pruebas.
-  (function () {
-    var originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-    navigator.mediaDevices.getUserMedia = function (constraints) {
-      if (constraints && constraints.video && typeof constraints.video === 'object') {
-        delete constraints.video.width;
-        delete constraints.video.height;
-        delete constraints.video.aspectRatio;
-        if (!constraints.video.facingMode) constraints.video.facingMode = 'environment';
-      }
-      return originalGetUserMedia(constraints);
-    };
-
-    // AR.js también reconfigura la resolución DESPUÉS de arrancar el vídeo,
-    // llamando a applyConstraints en el track. Interceptamos eso también.
-    if (window.MediaStreamTrack && MediaStreamTrack.prototype.applyConstraints) {
-      var originalApplyConstraints = MediaStreamTrack.prototype.applyConstraints;
-      MediaStreamTrack.prototype.applyConstraints = function (constraints) {
-        if (constraints && typeof constraints === 'object') {
-          delete constraints.width;
-          delete constraints.height;
-          delete constraints.aspectRatio;
-          if (constraints.advanced) {
-            constraints.advanced = constraints.advanced.map(function (c) {
-              var copy = Object.assign({}, c);
-              delete copy.width;
-              delete copy.height;
-              delete copy.aspectRatio;
-              return copy;
-            });
-          }
-        }
-        return originalApplyConstraints.call(this, constraints);
-      };
-    }
-  })();
-</script>
-
+<title>AR.js Minimal Marker Example</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
 <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-
 <style>
   .arjs-loader {
-    height: 100%; width: 100%; position: absolute; top: 0; left: 0;
-    background-color: rgba(0, 0, 0, 0.8); z-index: 9999;
-    display: flex; justify-content: center; align-items: center;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
-  .arjs-loader div { text-align: center; font-size: 1.25em; color: white; font-family: sans-serif; }
+  .arjs-loader div {
+    text-align: center;
+    font-size: 1.25em;
+    color: white;
+  }
 </style>
 </head>
 <body style="margin: 0px; overflow: hidden;">
-
-  <div class="arjs-loader"><div>Cargando…</div></div>
-
+  <div class="arjs-loader">
+    <div>Loading, please wait...</div>
+  </div>
   <a-scene
     vr-mode-ui="enabled: false;"
     renderer="logarithmicDepthBuffer: true; precision: medium;"
     embedded
     arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
-
     <a-marker preset="hiro">
-      <a-box position="0 0.5 0" rotation="0 45 0" depth="1" height="1" width="1"
-             material="color: #4f8ef7; shader: flat">
-        <a-animation attribute="rotation" to="0 405 0" dur="4000" easing="linear" repeat="indefinite"></a-animation>
-      </a-box>
-      <a-text value="Carmen de Burgos" align="center" position="0 1.3 0"
-              color="#ffffff" side="double" scale="1.5 1.5 1.5"></a-text>
+      <a-box position="0 0.5 0" material="color: red;"></a-box>
     </a-marker>
-
     <a-entity camera></a-entity>
   </a-scene>
 
@@ -84,24 +45,6 @@
     document.querySelector('a-scene').addEventListener('loaded', function () {
       document.querySelector('.arjs-loader').remove();
     });
-
-    // Fuerza el zoom de la cámara al mínimo en cuanto AR.js cree el <video>
-    function tryForceMinZoom() {
-      var video = document.querySelector('video');
-      if (!video || !video.srcObject) return false;
-      var track = video.srcObject.getVideoTracks()[0];
-      if (!track || !track.getCapabilities) return true; // no hay más que hacer
-      var caps = track.getCapabilities();
-      if ('zoom' in caps) {
-        track.applyConstraints({ advanced: [{ zoom: caps.zoom.min }] }).catch(function () {});
-      }
-      return true;
-    }
-    var zoomCheck = setInterval(function () {
-      if (tryForceMinZoom()) clearInterval(zoomCheck);
-    }, 400);
-    setTimeout(function () { clearInterval(zoomCheck); }, 15000);
   </script>
-
 </body>
 </html>
