@@ -16,6 +16,8 @@
         delete constraints.video.width;
         delete constraints.video.height;
         delete constraints.video.aspectRatio;
+        constraints.video.width = { ideal: 480 };
+        constraints.video.height = { ideal: 640 };
         if (!constraints.video.facingMode) constraints.video.facingMode = 'environment';
       }
       return originalGetUserMedia(constraints);
